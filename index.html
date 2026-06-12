@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>STRATOS — Weather</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body id="body">
+
+  <!-- ANIMATED CANVAS BACKGROUND -->
+  <canvas id="bgCanvas" aria-hidden="true"></canvas>
+
+  <!-- AURORA BLOBS -->
+  <div class="aurora" aria-hidden="true">
+    <div class="aurora-blob blob1"></div>
+    <div class="aurora-blob blob2"></div>
+    <div class="aurora-blob blob3"></div>
+  </div>
+
+  <!-- PARTICLE FIELD -->
+  <div class="particles" id="particles" aria-hidden="true"></div>
+
+  <!-- MAIN APP -->
+  <div class="app">
+
+    <!-- HEADER -->
+    <header class="header">
+      <div class="logo">
+        <svg class="logo-icon" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="16" cy="16" r="15" stroke="url(#lg)" stroke-width="1.5"/>
+          <path d="M8 18c0-4.4 3.6-8 8-8s8 3.6 8 8" stroke="url(#lg)" stroke-width="1.5" stroke-linecap="round"/>
+          <circle cx="16" cy="20" r="3" fill="url(#lg)"/>
+          <defs>
+            <linearGradient id="lg" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+              <stop stop-color="#a78bfa"/>
+              <stop offset="1" stop-color="#38bdf8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">STRATOS</span>
+      </div>
+      <div class="header-time" id="headerTime"></div>
+    </header>
+
+    <!-- HERO SEARCH -->
+    <section class="hero">
+      <h1 class="hero-title">
+        <span class="hero-line1">What's the weather</span>
+        <span class="hero-line2">like <em id="heroCity">anywhere</em>?</span>
+      </h1>
+
+      <div class="search-wrap">
+        <div class="search-box" id="searchBox">
+          <svg class="s-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+          </svg>
+          <input
+            id="cityInput"
+            class="s-input"
+            type="text"
+            placeholder="City name…"
+            autocomplete="off"
+            spellcheck="false"
+            aria-label="Enter city name"
+          />
+          <button class="s-btn" id="searchBtn" aria-label="Search">
+            <span class="s-btn-text">Search</span>
+            <svg class="s-btn-arrow" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+              <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- SUGGESTIONS ROW -->
+        <div class="suggestions">
+          <span class="sug-label">Try:</span>
+          <button class="sug-pill" data-city="New York">New York</button>
+          <button class="sug-pill" data-city="Tokyo">Tokyo</button>
+          <button class="sug-pill" data-city="London">London</button>
+          <button class="sug-pill" data-city="Dubai">Dubai</button>
+          <button class="sug-pill" data-city="Sydney">Sydney</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ERROR -->
+    <div class="error-pill" id="errorPill" hidden role="alert" aria-live="polite">
+      <span class="err-dot"></span>
+      <span id="errorMsg"></span>
+    </div>
+
+    <!-- LOADER -->
+    <div class="loader-wrap" id="loaderWrap" hidden aria-live="polite" aria-label="Loading">
+      <div class="loader-ring">
+        <svg viewBox="0 0 80 80" aria-hidden="true">
+          <circle cx="40" cy="40" r="34" stroke="rgba(255,255,255,0.06)" stroke-width="4" fill="none"/>
+          <circle cx="40" cy="40" r="34" stroke="url(#spinGrad)" stroke-width="4" fill="none"
+            stroke-linecap="round" stroke-dasharray="60 154" class="spin-arc"/>
+          <defs>
+            <linearGradient id="spinGrad" gradientTransform="rotate(90)">
+              <stop stop-color="#a78bfa"/>
+              <stop offset="1" stop-color="#38bdf8"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <p class="loader-text">Reading the atmosphere…</p>
+    </div>
+
+    <!-- WEATHER RESULT -->
+    <div class="result" id="result" hidden>
+
+      <!-- BIG CARD -->
+      <div class="big-card" id="bigCard">
+        <!-- CARD GLOW BLOB -->
+        <div class="card-glow" id="cardGlow"></div>
+
+        <!-- TOP META -->
+        <div class="card-meta">
+          <div class="card-location">
+            <svg class="pin-icon" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+              <path d="M8 0a5.5 5.5 0 0 0-5.5 5.5C2.5 9.5 8 16 8 16s5.5-6.5 5.5-10.5A5.5 5.5 0 0 0 8 0zm0 7.5a2 2 0 1 1 0-4 2 2 0 0 1 0 4z"/>
+            </svg>
+            <span id="rCity">—</span><span class="location-comma">,&nbsp;</span><span id="rCountry">—</span>
+          </div>
+          <div class="card-datetime" id="rDatetime">—</div>
+        </div>
+
+        <!-- CONDITION + ICON -->
+        <div class="card-condition-row">
+          <div class="condition-text-group">
+            <div class="condition-main" id="rCondition">—</div>
+            <div class="condition-desc" id="rDesc">—</div>
+          </div>
+          <div class="condition-icon-wrap">
+            <div class="icon-halo" id="iconHalo"></div>
+            <img class="cond-icon" id="rIcon" src="" alt="" width="100" height="100"/>
+          </div>
+        </div>
+
+        <!-- GIANT TEMP -->
+        <div class="temp-display">
+          <span class="temp-num" id="rTemp">—</span>
+          <div class="temp-suffix">
+            <span class="temp-deg">°C</span>
+            <span class="temp-feelslike">Feels <span id="rFeels">—</span></span>
+          </div>
+        </div>
+
+        <!-- MINMAX BAR -->
+        <div class="minmax-bar">
+          <div class="mm-item">
+            <span class="mm-arrow mm-down">↓</span>
+            <span class="mm-val" id="rMin">—</span>
+            <span class="mm-lbl">Low</span>
+          </div>
+          <div class="mm-divider"></div>
+          <div class="mm-item">
+            <span class="mm-arrow mm-up">↑</span>
+            <span class="mm-val" id="rMax">—</span>
+            <span class="mm-lbl">High</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAT CARDS ROW -->
+      <div class="stats-grid">
+        <div class="stat-card" id="sc1">
+          <div class="stat-icon">💧</div>
+          <div class="stat-bar-wrap">
+            <div class="stat-bar" id="humBar"></div>
+          </div>
+          <div class="stat-num" id="rHumidity">—</div>
+          <div class="stat-lbl">Humidity</div>
+        </div>
+        <div class="stat-card" id="sc2">
+          <div class="stat-icon">💨</div>
+          <div class="stat-num" id="rWind">—</div>
+          <div class="stat-lbl">Wind</div>
+        </div>
+        <div class="stat-card" id="sc3">
+          <div class="stat-icon">🌡️</div>
+          <div class="stat-num" id="rPressure">—</div>
+          <div class="stat-lbl">Pressure</div>
+        </div>
+        <div class="stat-card" id="sc4">
+          <div class="stat-icon">👁️</div>
+          <div class="stat-num" id="rVisibility">—</div>
+          <div class="stat-lbl">Visibility</div>
+        </div>
+        <div class="stat-card" id="sc5">
+          <div class="stat-icon">🌅</div>
+          <div class="stat-num" id="rSunrise">—</div>
+          <div class="stat-lbl">Sunrise</div>
+        </div>
+        <div class="stat-card" id="sc6">
+          <div class="stat-icon">🌇</div>
+          <div class="stat-num" id="rSunset">—</div>
+          <div class="stat-lbl">Sunset</div>
+        </div>
+      </div>
+
+    </div><!-- /result -->
+
+    <!-- IDLE STATE -->
+    <div class="idle-state" id="idleState">
+      <div class="idle-globe">🌍</div>
+      <p class="idle-text">Search any city above to see live weather</p>
+    </div>
+
+  </div><!-- /app -->
+
+  <script src="script.js"></script>
+</body>
+</html>
